@@ -4,36 +4,140 @@ from PIL import Image, ImageTk
 
 blackTurn = True
 
+class Disk:
+    def __init__(self, color=None):
+        self.color = color
+
+    @property
+    def color(self):
+        return self._color
+    @color.setter
+    def color(self, new_color):
+        self._color = new_color
+
+    def flip(self):
+        if self.color == "Black":
+            self.color = "White"
+        elif self.color == "White":
+            self.color = "Black"
+
+class Color(Enum):
+    BLACK = 0
+    WHITE = 1
 
 class Tile(Enum):
     EMPTY = 0
-    BLACK = 1
-    WHITE = 2
-    VALID = 3
+    VALID = 1
+
+class OthelloTileWeights(Enum):
+    GRID00 = 16.16
+    GRID01 = -3.03
+    GRID02 = 0.99
+    GRID03 = 0.43
+    GRID10 = -4.12
+    GRID11 = -1.81
+    GRID12 = -0.08
+    GRID13 = -0.27
+    GRID20 = 1.33
+    GRID21 = -0.04
+    GRID22 = 0.51
+    GRID23 = 0.07
+    GRID30 = 0.63
+    GRID31 = -0.18
+    GRID32 = -0.04
+    GRID33 = -0.01
+
+class Board:
+    def __init__(self, rows, columns):
+        self.rows = rows
+        self.columns = columns
+        self.grid = [[' ' for _ in range(self.columns)] for _ in range(self.rows)]
+        self.weights = [[0 for _ in range(self.columns)] for _ in range(self.rows)]
+
+    
+    def set_disk(self, i, j, color):
+        if 0 <= i < self.rows and 0 <= j < self.columns:
+            self.grid[i][j] = Disk(color)
+        else:
+            print("Invalid position.")
+
+    def is_empty(self, i, j):
+        if 0 <= i < self.rows and 0 <= j < self.columns:
+            return self.grid[i][j] == ' '  # ' ' represents an empty cell
+        else:
+            print("Invalid position.")
+
+    def get_disk(self, i, j):
+        if 0 <= i < self.rows and 0 <= j < self.columns:
+            return self.grid[i][j]
+        else:
+            print("Invalid position.")
+
+    def set_weight(self, i, j, weight):
+        if 0 <= i < self.rows and 0 <= j < self.columns:
+            self.weights[i][j] = weight
+        else:
+            print("Invalid position.")
 
 
 class GameManager:
     def __init__(self, root):
         self.root = root
-        self.rows = 8
-        self.columns = 8
-        self.cellsInfo = []
+        self.board = Board(8, 8)
+        self.num_of_disks = 0
         self.buttons = []
 
-        for i in range(self.rows):
-            row_info = []
-            for j in range(self.columns):
-                if (i == 3 and j == 3) or (i == 4 and j == 4):
-                    row_info.append(Tile.BLACK)
-                elif (i == 3 and j == 4) or (i == 4 and j == 3):
-                    row_info.append(Tile.WHITE)
-                else:
-                    row_info.append(Tile.EMPTY)
-            self.cellsInfo.append(row_info)
+        grid_idx = 7
 
-        for i in range(self.rows):
+        for i in range(self.board.rows):
+            for j in range(self.board.columns):
+                if i == 0:
+                    weight_row = OthelloTileWeights[f"GRID0{j}"].value
+                    self.board.set_weight(i, j, weight_row)
+                    self.board.set_weight(i + grid_idx, j, weight_row)
+                    self.board.set_weight(i, grid_idx - j, weight_row)
+                    self.board.set_weight(i + grid_idx, grid_idx - j, weight_row)
+                elif i == grid_idx:
+                    weight_row = OthelloTileWeights[f"GRID3{j}"].value
+                    self.board.set_weight(i, j, weight_row)
+                    self.board.set_weight(i + grid_idx, j, weight_row)
+                    self.board.set_weight(i, grid_idx - j, weight_row)
+                    self.board.set_weight(i + grid_idx, grid_idx - j, weight_row)
+                else:
+                    # For other rows, set the weight based on the corresponding column index
+                    weight = OthelloTileWeights[f"GRID{i % 4}{j}"].value
+                    self.board.set_weight(i, j, weight)
+                    self.board.set_weight(i + grid_idx, j, weight)
+                    self.board.set_weight(i, grid_idx - j, weight)
+                    self.board.set_weight(i + grid_idx, grid_idx - j, weight)
+
+        black_disk1 = Disk(Color.BLACK)
+        black_disk2 = Disk(Color.BLACK)
+        white_disk1 = Disk(Color.WHITE)
+        white_disk2 = Disk(Color.WHITE)
+
+        Board.grid[3][3] = black_disk1
+        Board.grid[4][4] = black_disk2
+        Board.grid[3][4] = white_disk1
+        Board.grid[4][3] = white_disk2
+        self.num_of_disks += 4
+
+
+        # for i in range(self.board.rows):
+        #     row_info = []
+        #     for j in range(self.board.columns):
+        #         if (i == 3 and j == 3) or (i == 4 and j == 4):
+        #             black_disk = Disk(Color.BLACK)
+        #             row_info.append(Tile.BLACK)
+        #         elif (i == 3 and j == 4) or (i == 4 and j == 3):
+        #             row_info.append(Tile.WHITE)
+        #         else:
+        #             row_info.append(Tile.EMPTY)
+        #     self.cellsInfo.append(row_info)
+
+        for i in range(self.board.rows):
             buttons_row = []
-            for j in range(self.columns):
+            for j in range(self.board.columns):
                 button = tk.Canvas(root, width=30, height=30, bg='green', highlightthickness=1,
                                    highlightbackground='black')
                 button.grid(row=i, column=j, sticky="nsew")  # Use sticky to expand cells
@@ -42,21 +146,26 @@ class GameManager:
             self.buttons.append(buttons_row)
 
         # Configure rows and columns to expand with window resizing
-        for i in range(self.rows):
+        for i in range(self.board.rows):
             self.root.grid_rowconfigure(i, weight=1, minsize=30)  # Set minimum size for each row
-        for j in range(self.columns):
+        for j in range(self.board.columns):
             self.root.grid_columnconfigure(j, weight=1, minsize=30)  # Set minimum size for each column
         self.update_ui()
 
     def play_at(self, row, column):
-        if self.cellsInfo[row][column] != Tile.VALID:
+        if not self.board.is_empty(row, column):
             return False
+        
+        # if self.cellsInfo[row][column] != Tile.VALID:
+        #     return False
 
         global blackTurn
-        me = Tile.BLACK if blackTurn else Tile.WHITE
-        opp = Tile.WHITE if blackTurn else Tile.BLACK
+        # me ==> player1
+        # opp ==> palyer2
+        player1 = Tile.BLACK if blackTurn else Tile.WHITE
+        player2 = Tile.WHITE if blackTurn else Tile.BLACK
 
-        self.cellsInfo[row][column] = me
+        self.cellsInfo[row][column] = player1
 
         directions = [
             (-1, 0),  # Up
@@ -76,13 +185,13 @@ class GameManager:
 
             # Move in the current direction until out of bounds or an empty cell is encountered
             while 0 <= x < self.rows and 0 <= y < self.columns:
-                if self.cellsInfo[x][y] == opp:
+                if self.cellsInfo[x][y] == player2:
                     to_flip.append((x, y))
-                elif self.cellsInfo[x][y] == me:
+                elif self.cellsInfo[x][y] == player1:
                     if to_flip:
                         # Flip opponent's tiles to current player's tiles
                         for flip_row, flip_col in to_flip:
-                            self.cellsInfo[flip_row][flip_col] = me
+                            self.cellsInfo[flip_row][flip_col] = player1
                     break
                 else:
                     break
@@ -195,7 +304,28 @@ class GameManager:
             if winner == "Draw":
                 print(winner)
             print(f'winner is {winner}')
-
+    
+    # def alpha_beta_prune(position, depth, alpha, beta, maximizing_player):
+    #     if depth == 0 or game over in position:
+    #         return static evaluation of position
+    #     if maximizing_player:
+    #         max_evaluation = -infinity
+    #         for each child of position:
+    #             eval = alpha_beta_prune(child, depth - 1, alpha, beta False)
+    #             max_evaluation = max(max_evaluation, eval)
+    #             alpha = max(alpha, eval)
+    #             if beta <= alpha
+    #                 break
+    #         return max_evaluation
+    #     else
+    #         min_evaluation = +infinity
+    #         for each child of position
+    #             eval = alpha_beta_prune(chile, depth - 1,alpha, beta, True)
+    #             min_evaluation = min(min_evaluation, eval)
+    #             beta = min(beta, eval)
+    #             if beta <= alpha
+    #                 break
+    #         return min_evaluation
 
 def main():
     root = tk.Tk()
@@ -212,3 +342,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+    
