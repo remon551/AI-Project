@@ -25,10 +25,6 @@ class Color(Enum):
     BLACK = 0
     WHITE = 1
 
-class Tile(Enum):
-    EMPTY = 0
-    VALID = 1
-
 class OthelloTileWeights(Enum):
     GRID00 = 16.16
     GRID01 = -3.03
@@ -53,30 +49,49 @@ class Board:
         self.columns = columns
         self.grid = [[' ' for _ in range(self.columns)] for _ in range(self.rows)]
         self.weights = [[0 for _ in range(self.columns)] for _ in range(self.rows)]
+        self.valid = [[False for _ in range(self.columns)] for _ in range(self.rows)]
 
     
     def set_disk(self, i, j, color):
         if 0 <= i < self.rows and 0 <= j < self.columns:
             self.grid[i][j] = Disk(color)
         else:
+            print(f"set_disk{i}, {j}: ")
             print("Invalid position.")
 
     def is_empty(self, i, j):
         if 0 <= i < self.rows and 0 <= j < self.columns:
             return self.grid[i][j] == ' '  # ' ' represents an empty cell
         else:
+            print(f"is_empty{i}, {j}: ")
             print("Invalid position.")
 
     def get_disk(self, i, j):
         if 0 <= i < self.rows and 0 <= j < self.columns:
             return self.grid[i][j]
         else:
+            print(f"get_disk{i}, {j}: ")
             print("Invalid position.")
 
     def set_weight(self, i, j, weight):
         if 0 <= i < self.rows and 0 <= j < self.columns:
             self.weights[i][j] = weight
         else:
+            print(f"set_weight{i}, {j}: ")
+            print("Invalid position.")
+    
+    def is_valid(self, i, j):
+        if 0 <= i < self.rows and 0 <= j < self.columns:
+            return self.valid[i][j]
+        else:
+            print(f"is_valid{i}, {j}: ")
+            print("Invalid position.")
+        
+    def set_to_valid(self, i, j):
+        if 0 <= i < self.rows and 0 <= j < self.columns:
+            self.valid[i][j] = True
+        else:
+            print(f"set_to_valid{i}, {j}: ")
             print("Invalid position.")
 
 
@@ -86,60 +101,76 @@ class GameManager:
         self.board = Board(8, 8)
         self.num_of_disks = 0
         self.buttons = []
-
+    
         grid_idx = 7
+        
+        for i in range(4):
+            for j in range(4):
+                weight_row = OthelloTileWeights[f"GRID{i}{j}"].value
+                self.board.set_weight(i, j, weight_row)
+                self.board.set_weight(grid_idx - i, j, weight_row)
+                self.board.set_weight(i, grid_idx - j, weight_row)
+                self.board.set_weight(grid_idx - i, grid_idx - j, weight_row)
 
-        for i in range(self.board.rows):
-            for j in range(self.board.columns):
-                if i == 0:
-                    weight_row = OthelloTileWeights[f"GRID0{j}"].value
-                    self.board.set_weight(i, j, weight_row)
-                    self.board.set_weight(i + grid_idx, j, weight_row)
-                    self.board.set_weight(i, grid_idx - j, weight_row)
-                    self.board.set_weight(i + grid_idx, grid_idx - j, weight_row)
-                elif i == grid_idx:
-                    weight_row = OthelloTileWeights[f"GRID3{j}"].value
-                    self.board.set_weight(i, j, weight_row)
-                    self.board.set_weight(i + grid_idx, j, weight_row)
-                    self.board.set_weight(i, grid_idx - j, weight_row)
-                    self.board.set_weight(i + grid_idx, grid_idx - j, weight_row)
-                else:
-                    # For other rows, set the weight based on the corresponding column index
-                    weight = OthelloTileWeights[f"GRID{i % 4}{j}"].value
-                    self.board.set_weight(i, j, weight)
-                    self.board.set_weight(i + grid_idx, j, weight)
-                    self.board.set_weight(i, grid_idx - j, weight)
-                    self.board.set_weight(i + grid_idx, grid_idx - j, weight)
+                # elif i == 1:
+                #     weight_row = OthelloTileWeights[f"GRID1{j}"].value
+                #     self.board.set_weight(i, j, weight_row)
+                #     self.board.set_weight(grid_idx - i, j, weight_row)
+                #     self.board.set_weight(i, j + grid_idx, weight_row)
+                #     self.board.set_weight(grid_idx - i, grid_idx - j, weight_row)
+                # elif i == 2:
+                #     weight_row = OthelloTileWeights[f"GRID2{j}"].value
+                #     self.board.set_weight(i, j, weight_row)
+                #     self.board.set_weight(grid_idx - i, j, weight_row)
+                #     self.board.set_weight(i, grid_idx - j, weight_row)
+                #     self.board.set_weight(grid_idx - i, grid_idx - j, weight_row)
+
+
+
+
+
+
+                        
+        # grid_idx = 7
+        # for i in range(4):
+        #     for j in range(4):
+        #         if i == 0:
+        #             weight_row = OthelloTileWeights[f"GRID0{j}"].value
+        #             self.board.set_weight(i, j, weight_row)
+        #             self.board.set_weight(i + grid_idx, j, weight_row)
+        #             self.board.set_weight(i, grid_idx - j, weight_row)
+        #             self.board.set_weight(i + grid_idx, grid_idx - j, weight_row)
+        #         elif i == grid_idx:
+        #             weight_row = OthelloTileWeights[f"GRID3{j}"].value
+        #             self.board.set_weight(i, j, weight_row)
+        #             self.board.set_weight(i + grid_idx, j, weight_row)
+        #             self.board.set_weight(i, grid_idx - j, weight_row)
+        #             self.board.set_weight(i + grid_idx, grid_idx - j, weight_row)
+        #         else:
+        #             # For other rows, set the weight based on the corresponding column index
+        #             weight = OthelloTileWeights[f"GRID{i % 4}{j}"].value
+        #             self.board.set_weight(i, j, weight)
+        #             self.board.set_weight(i + grid_idx, j, weight)
+        #             self.board.set_weight(i, grid_idx - j, weight)
+        #             self.board.set_weight(i + grid_idx, grid_idx - j, weight)
 
         black_disk1 = Disk(Color.BLACK)
         black_disk2 = Disk(Color.BLACK)
         white_disk1 = Disk(Color.WHITE)
         white_disk2 = Disk(Color.WHITE)
 
-        Board.grid[3][3] = black_disk1
-        Board.grid[4][4] = black_disk2
-        Board.grid[3][4] = white_disk1
-        Board.grid[4][3] = white_disk2
+        self.board.grid[3][3] = black_disk1
+        self.board.grid[4][4] = black_disk2
+        self.board.grid[3][4] = white_disk1
+        self.board.grid[4][3] = white_disk2
         self.num_of_disks += 4
 
-
-        # for i in range(self.board.rows):
-        #     row_info = []
-        #     for j in range(self.board.columns):
-        #         if (i == 3 and j == 3) or (i == 4 and j == 4):
-        #             black_disk = Disk(Color.BLACK)
-        #             row_info.append(Tile.BLACK)
-        #         elif (i == 3 and j == 4) or (i == 4 and j == 3):
-        #             row_info.append(Tile.WHITE)
-        #         else:
-        #             row_info.append(Tile.EMPTY)
-        #     self.cellsInfo.append(row_info)
 
         for i in range(self.board.rows):
             buttons_row = []
             for j in range(self.board.columns):
                 button = tk.Canvas(root, width=30, height=30, bg='green', highlightthickness=1,
-                                   highlightbackground='black')
+                                    highlightbackground='black')
                 button.grid(row=i, column=j, sticky="nsew")  # Use sticky to expand cells
                 button.bind('<Button-1>', lambda event, r=i, c=j: self.play_at(r, c))
                 buttons_row.append(button)
@@ -153,19 +184,17 @@ class GameManager:
         self.update_ui()
 
     def play_at(self, row, column):
-        if not self.board.is_empty(row, column):
+        if not self.board.is_valid(row, column):
             return False
         
-        # if self.cellsInfo[row][column] != Tile.VALID:
-        #     return False
 
         global blackTurn
         # me ==> player1
         # opp ==> palyer2
-        player1 = Tile.BLACK if blackTurn else Tile.WHITE
-        player2 = Tile.WHITE if blackTurn else Tile.BLACK
+        player1 = Color.BLACK if blackTurn else Color.WHITE
+        player2 = Color.WHITE if blackTurn else Color.BLACK
 
-        self.cellsInfo[row][column] = player1
+        self.board.get_disk(row, column).color(player1)
 
         directions = [
             (-1, 0),  # Up
@@ -184,14 +213,14 @@ class GameManager:
             to_flip = []
 
             # Move in the current direction until out of bounds or an empty cell is encountered
-            while 0 <= x < self.rows and 0 <= y < self.columns:
-                if self.cellsInfo[x][y] == player2:
+            while 0 <= x < self.board.rows and 0 <= y < self.board.columns:
+                if self.board.get_disk(x, y).color == player2:
                     to_flip.append((x, y))
-                elif self.cellsInfo[x][y] == player1:
+                elif self.board.get_disk(x, y).color == player1:
                     if to_flip:
                         # Flip opponent's tiles to current player's tiles
                         for flip_row, flip_col in to_flip:
-                            self.cellsInfo[flip_row][flip_col] = player1
+                            self.board.get_disk(flip_row, flip_col).color(player1)
                     break
                 else:
                     break
@@ -204,11 +233,11 @@ class GameManager:
         self.update_ui()
 
     def check_if_valid_move(self, i, j):
-        if self.cellsInfo[i][j] != Tile.EMPTY:
-            return False  # Cell must be empty to place a new tile
-
-        current_player = Tile.BLACK if blackTurn else Tile.WHITE
-        opponent_player = Tile.WHITE if blackTurn else Tile.BLACK
+        if self.board.is_empty(i, j):
+            return False
+        
+        current_player = Color.BLACK if blackTurn else Color.WHITE
+        opponent_player = Color.WHITE if blackTurn else Color.BLACK
 
         directions = [
             (-1, 0),  # Up
@@ -230,11 +259,11 @@ class GameManager:
             flip_candidates = []
 
             # Move in the current direction until out of bounds or an empty cell is encountered
-            while 0 <= x < self.rows and 0 <= y < self.columns:
-                if self.cellsInfo[x][y] == opponent_player:
+            while 0 <= x < self.board.rows and 0 <= y < self.board.columns:
+                if self.board.get_disk(i, j).color == opponent_player:
                     found_opponent = True
                     flip_candidates.append((x, y))
-                elif self.cellsInfo[x][y] == current_player:
+                elif self.board.get_disk(i, j).color == current_player:
                     if found_opponent and len(flip_candidates) > 0:
                         valid_move = True
                         break
@@ -254,12 +283,13 @@ class GameManager:
     def calc_winner(self):
         black = 0
         white = 0
-        for i in range(0, self.rows):
-            for j in range(0, self.columns):
-                if self.cellsInfo[i][j] == Tile.BLACK:
-                    black = black+1
-                elif self.cellsInfo[i][j] == Tile.WHITE:
-                    white = white+1
+        for i in range(0, self.board.rows):
+            for j in range(0, self.board.columns):
+                if not self.board.is_empty(i, j):
+                    if self.board.get_disk(i, j).color == Color.BLACK:
+                        black = black+1
+                    elif self.board.get_disk(i, j).color == Color.WHITE:
+                        white = white+1
         if black > white:
             return "Black"
         elif white > black:
@@ -269,22 +299,23 @@ class GameManager:
 
     def update_ui(self):
         found_valid_moves = False
-        for i in range(self.rows):
-            for j in range(self.columns):
+        for i in range(self.board.rows):
+            for j in range(self.board.columns):
                 # to remove any cell that was valid before, maybe now it won't
-                if self.cellsInfo[i][j] == Tile.VALID:
-                    self.cellsInfo[i][j] = Tile.EMPTY
+                if self.board.is_valid(i, j):
+                    self.board.set_disk(i, j, Disk())
                 img_path = ""
-                if self.cellsInfo[i][j] == Tile.BLACK:
-                    img_path = "black.png"
-                elif self.cellsInfo[i][j] == Tile.WHITE:
-                    img_path = "white.png"
-                else:
-                    valid = self.check_if_valid_move(i, j)
-                    if valid:
-                        found_valid_moves = True
-                        self.cellsInfo[i][j] = Tile.VALID
-                        img_path = "dotted.png"
+                if not self.board.is_empty(i, j):
+                    if self.board.get_disk(i, j).color == Color.BLACK:
+                        img_path = "black.png"
+                    elif self.board.get_disk(i, j).color == Color.WHITE:
+                        img_path = "white.png"
+                    else:
+                        valid = self.check_if_valid_move(i, j)
+                        if valid:
+                            found_valid_moves = True
+                            self.board.set_to_valid(i, j)
+                            img_path = "dotted.png"
 
                 if img_path != "":
                     img = Image.open(img_path)
