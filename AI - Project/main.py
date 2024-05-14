@@ -145,9 +145,9 @@ class GameManager:
 
         # Configure rows and columns to expand with window resizing
         for i in range(self.board.rows):
-            self.root.grid_rowconfigure(i, weight=1, minsize=30)  # Set minimum size for each row
+            self.root.grid_rowconfigure(i, weight=1, minsize=40)  # Set minimum size for each row
         for j in range(self.board.columns):
-            self.root.grid_columnconfigure(j, weight=1, minsize=30)  # Set minimum size for each column
+            self.root.grid_columnconfigure(j, weight=1, minsize=2)  # Set minimum size for each column
         self.update_ui()
 
     def play_at(self, row, column):
@@ -282,9 +282,9 @@ class GameManager:
                 if img_path != "":
                     img = Image.open(img_path)
                 else:
-                    img = Image.new("RGBA", (30, 30))  # Create empty image for Tile.EMPTY
+                    img = Image.new("RGBA", (80, 80))  # Create empty image for Tile.EMPTY
 
-                img = img.resize((28, 28))  # Resize image to fit button
+                img = img.resize((95, 95))  # Resize image to fit button
                 photo = ImageTk.PhotoImage(img)
 
                 # Update button with the image
@@ -328,7 +328,7 @@ def main():
 
     # Set minimum size of root window to prevent resizing to less than desired grid size
     root.update_idletasks()  # Update to get correct window size after widgets are laid out
-    root.minsize(root.winfo_reqwidth(), root.winfo_reqheight())
+    root.minsize(800, 800)
 
     root.mainloop()
 
