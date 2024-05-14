@@ -1,5 +1,14 @@
+import sys
 import tkinter as tk
 import global_variables as gv
+
+
+def on_window_close():
+    # This method is called when the window is closed
+    if gv.diff == -1:
+        # User closed the window without choosing a difficulty
+        print("No difficulty selected. Exiting...")
+        sys.exit(0)  # Exit the application gracefully
 
 
 class SelectDifficultyWindow:
@@ -30,6 +39,8 @@ class SelectDifficultyWindow:
         easy_button.pack(pady=10)
         medium_button.pack(pady=10)
         hard_button.pack(pady=10)
+
+        self.selection_window.protocol("WM_DELETE_WINDOW", on_window_close)
 
     def set_difficulty(self, difficulty):
         gv.diff = difficulty

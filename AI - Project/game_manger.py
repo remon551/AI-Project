@@ -6,6 +6,7 @@ from color import Color
 from select_diff_window import SelectDifficultyWindow
 from PIL import Image, ImageTk
 import global_variables as gv
+from restart_window import RestartWindow
 
 
 class OthelloTileWeights(Enum):
@@ -35,8 +36,8 @@ class GameManager:
         self.num_of_disks = 0
         self.buttons = []
 
-        self.turn_label = tk.Label(root, height=1, width=20, )
-        self.turn_label.configure(text="Black Turn")
+        self.turn_label = tk.Label(root, height=3, width=20, )
+        self.turn_label.configure(text=f"Black Turn\nBlack Score: {gv.blackScore}\nWhite Score: {gv.whiteScore}")
         self.turn_label.grid(row=self.board.rows, columnspan=self.board.columns)
 
         for i in range(self.board.rows):
@@ -79,6 +80,7 @@ class GameManager:
         SelectDifficultyWindow(root)
 
     def play_at(self, row, column):
+        print(gv.diff)
         if not self.board.is_valid(row, column):
             return False
 
@@ -122,12 +124,17 @@ class GameManager:
         gv.blackTurn = not gv.blackTurn
 
         if not gv.blackTurn:
-            self.turn_label.configure(text="White Turn")
+            self.turn_label.configure(text=f"White Turn\nBlack Score: {gv.blackScore}\nWhite Score: {gv.whiteScore}")
         else:
-            self.turn_label.configure(text="Black Turn")
+            self.turn_label.configure(text=f"Black Turn\nBlack Score: {gv.blackScore}\nWhite Score: {gv.whiteScore}")
+        self.update_ui()
 
         print(f"You clicked on {row} and {column}")
-        self.update_ui()
+
+        if not gv.blackTurn:  # if next turn is AI turn
+            # 1) bestMove = findBestMove()
+            # 2) self.playAt(bestMove.x, bestMove.y)
+            pass
 
     def check_if_valid_move(self, i, j):
         if not self.board.is_empty(i, j):
@@ -185,8 +192,10 @@ class GameManager:
                     elif self.board.get_disk(i, j).color == Color.WHITE:
                         white = white + 1
         if black > white:
+            gv.blackScore = gv.blackScore + 1
             return "Black"
         elif white > black:
+            gv.whiteScore = gv.whiteScore + 1
             return "White"
         else:
             return "Draw"
@@ -214,9 +223,9 @@ class GameManager:
                 if img_path != "":
                     img = Image.open(img_path)
                 else:
-                    img = Image.new("RGBA", (70, 70))  # Create empty image for Tile.EMPTY
+                    img = Image.new("RGBA", (69, 69))  # Create empty image for Tile.EMPTY
 
-                img = img.resize((70, 70))  # Resize image to fit button
+                img = img.resize((69, 69))  # Resize image to fit button
                 photo = ImageTk.PhotoImage(img)
 
                 # Update button with the image
@@ -228,27 +237,29 @@ class GameManager:
             winner = self.calc_winner()
             if winner == "Draw":
                 print(winner)
-            print(f'winner is {winner}')
+            else:
+                print(f'winner is {winner}')
+            RestartWindow(self.root, self, winner)
 
     def alpha_beta_prune(self, position, depth, alpha, beta, maximizing_player):
-        if depth == 0: # or calc winner
+        if depth == 0:  # or calc winner
             return self.static_evaluation(position)
 
         if maximizing_player:
             max_evaluation = float('-inf')
             for child in self.generate_moves(position):
-                eval = self.alpha_beta_prune(child, depth - 1, alpha, beta, False)
-                max_evaluation = max(max_evaluation, eval)
-                alpha = max(alpha, eval)
+                evaluation = self.alpha_beta_prune(child, depth - 1, alpha, beta, False)
+                max_evaluation = max(max_evaluation, evaluation)
+                alpha = max(alpha, evaluation)
                 if beta <= alpha:
                     break
             return max_evaluation
         else:
             min_evaluation = float('inf')
             for child in self.generate_moves(position):
-                eval = self.alpha_beta_prune(child, depth - 1, alpha, beta, True)
-                min_evaluation = min(min_evaluation, eval)
-                beta = min(beta, eval)
+                evaluation = self.alpha_beta_prune(child, depth - 1, alpha, beta, True)
+                min_evaluation = min(min_evaluation, evaluation)
+                beta = min(beta, evaluation)
                 if beta <= alpha:
                     break
             return min_evaluation
@@ -293,5 +304,3 @@ class GameManager:
                 best_move = move
 
         return best_move
-
-

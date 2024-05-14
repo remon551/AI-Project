@@ -1,7 +1,5 @@
-import sys
 import tkinter as tk
 from game_manger import GameManager
-import global_variables as gv
 
 
 def main():
@@ -9,11 +7,11 @@ def main():
     root.title("Othello Game")
 
     # Create the GameManager instance
-    game_manager = GameManager(root)
+    GameManager(root)
 
     # Center the main window on the screen
     window_width = 600
-    window_height = 605
+    window_height = 620
     screen_width = root.winfo_screenwidth()
     screen_height = root.winfo_screenheight()
     x_position = (screen_width // 2) - (window_width // 2)
@@ -27,12 +25,6 @@ def main():
 
     # Start the main event loop
     root.mainloop()
-
-    # After the main loop exits (window closed), check if difficulty was set
-    if gv.diff == -1:
-        # User closed the difficulty selection without choosing
-        print("No difficulty selected. Exiting...")
-        sys.exit(0)  # Exit the application gracefully
 
 
 if __name__ == "__main__":

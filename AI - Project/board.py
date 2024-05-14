@@ -57,3 +57,4 @@ class Board:
         else:
             print(f"set_to_not_valid{i}, {j}: ")
             print("Invalid position.")
+
