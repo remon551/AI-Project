@@ -297,6 +297,80 @@ class GameManager:
             if winner == "Draw":
                 print(winner)
             print(f'winner is {winner}')
+
+
+
+    def alpha_beta_prune(self, position, depth, alpha, beta, maximizing_player):
+        if depth == 0: # or calc winner
+            return self.static_evaluation(position)
+
+        if maximizing_player:
+            max_evaluation = float('-inf')
+            for child in self.generate_moves(position):
+                eval = self.alpha_beta_prune(child, depth - 1, alpha, beta, False)
+                max_evaluation = max(max_evaluation, eval)
+                alpha = max(alpha, eval)
+                if beta <= alpha:
+                    break
+            return max_evaluation
+        else:
+            min_evaluation = float('inf')
+            for child in self.generate_moves(position):
+                eval = self.alpha_beta_prune(child, depth - 1, alpha, beta, True)
+                min_evaluation = min(min_evaluation, eval)
+                beta = min(beta, eval)
+                if beta <= alpha:
+                    break
+            return min_evaluation
+
+    def generate_moves(self, position):
+        # Generate all possible moves from the current position
+        moves = []
+        for i in range(self.board.rows):
+            for j in range(self.board.columns):
+                if self.check_if_valid_move(i, j):
+                    # Create a copy of the current position and apply the move
+                    new_position = position.copy()
+                    new_position.set_disk(i, j, position.current_player)
+                    moves.append(new_position)
+        return moves
+
+    def static_evaluation(self, position):
+        black_score = 0
+        white_score = 0
+
+        for i in range(position.rows):
+            for j in range(position.columns):
+                disk = position.get_disk(i, j)
+                if disk.color == Color.BLACK:
+                    black_score += position.weights[i][j]
+                elif disk.color == Color.WHITE:
+                    white_score += position.weights[i][j]
+
+        return black_score - white_score
+
+    def find_best_move(self, position, depth):
+        best_score = float('-inf')
+        best_move = None
+        alpha = float('-inf')
+        beta = float('inf')
+        maximizing_player = True
+
+        for move in self.generate_moves(position):
+            score = self.alpha_beta_prune(move, depth - 1, alpha, beta, maximizing_player)
+            if score > best_score:
+                best_score = score
+                best_move = move
+
+        return best_move
+
+    # def play_best_move(self):
+    #     depth = 4  # Adjust depth based on the desired search depth
+    #     best_move = self.find_best_move(self.board, depth)
+    #     if best_move:
+    #         self.board = best_move
+    #         self.update_ui()
+
     
     # def alpha_beta_prune(position, depth, alpha, beta, maximizing_player):
     #     if depth == 0 or game over in position:
