@@ -57,4 +57,11 @@ class Board:
         else:
             print(f"set_to_not_valid{i}, {j}: ")
             print("Invalid position.")
+    
+    def copy(self):
+        copied_board = Board(self.rows, self.columns)
+        copied_board.grid = [row[:] for row in self.grid]
+        copied_board.weights = [row[:] for row in self.weights]
+        copied_board.valid = [row[:] for row in self.valid]
+        return copied_board
 

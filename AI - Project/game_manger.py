@@ -80,7 +80,6 @@ class GameManager:
         SelectDifficultyWindow(root)
 
     def play_at(self, row, column):
-        print(gv.diff)
         if not self.board.is_valid(row, column):
             return False
 
@@ -132,8 +131,20 @@ class GameManager:
         print(f"You clicked on {row} and {column}")
 
         if not gv.blackTurn:  # if next turn is AI turn
-            # 1) bestMove = findBestMove()
-            # 2) self.playAt(bestMove.x, bestMove.y)
+            best_move = self.find_best_move(self.board, gv.diff)
+
+            best_move_x = -1
+            best_move_y = -1
+            for i in range(self.board.rows):
+                for j in range(self.board.columns):
+                    if self.board.grid[i][j] != best_move.grid[i][j]:
+                        best_move_x = i
+                        best_move_y = j
+                        break
+            # self.board = bestMove
+            # gv.blackTurn = True
+            # self.update_ui()
+            self.play_at(best_move_x, best_move_y)
             pass
 
     def check_if_valid_move(self, i, j):
@@ -272,7 +283,8 @@ class GameManager:
                 if self.check_if_valid_move(i, j):
                     # Create a copy of the current position and apply the move
                     new_position = position.copy()
-                    new_position.set_disk(i, j, position.current_player)
+                    #new_position.set_disk(i, j, position.current_player)
+                    new_position.set_disk(i, j, Color.WHITE)
                     moves.append(new_position)
         return moves
 
@@ -283,10 +295,11 @@ class GameManager:
         for i in range(position.rows):
             for j in range(position.columns):
                 disk = position.get_disk(i, j)
-                if disk.color == Color.BLACK:
-                    black_score += position.weights[i][j]
-                elif disk.color == Color.WHITE:
-                    white_score += position.weights[i][j]
+                if disk != ' ':
+                    if disk.color == Color.BLACK:
+                        black_score += position.weights[i][j]
+                    elif disk.color == Color.WHITE:
+                        white_score += position.weights[i][j]
 
         return black_score - white_score
 
